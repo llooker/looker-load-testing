@@ -8,7 +8,8 @@ import looker_sdk
 import random
 
 SITE = "https://sharonpbl.looker.com"
-##define dashboard possibilities
+
+## dashboard path possibilities
 dash_id = [
             "/19?Date=90%20days", 
             "/19?Date=180%20days",
@@ -35,8 +36,8 @@ dash_id = [
             "/18?Date=14%20days&Browser=Safari",
             "/18?Date=30%20days&Browser=Safari"
           ]
-#for initial sso dashboard
-DASH_PATH= random.choice(dash_id)
+
+#DASH_PATH= random.choice(dash_id)
 
 #explore path possibilities
 explore_id = [
@@ -48,9 +49,8 @@ explore_id = [
 
 ##create unique user_id for each web session
 users=random.randint(0,100000)
-EMBED_USER_ID = str(users) 
 
-##not currently using - how to insert random value in user_attribute brand?
+## brand user attribute possibilities
 brand = ["Calvin Klein", "Carhartt", "Allegra K","Dockers","Levi's"]
 
 sdk=looker_sdk.init31()
@@ -138,9 +138,20 @@ class LocustUserBehavior(TaskSet):
                     (By.ID, "dash_listener")
                 )
             )
+            self.client.get(f"{SITE}/embed/dashboards{str(random.choice(dash_id))}")
+
+            self.client.execute_script(script)
+
+            self.client.wait.until(
+                EC.presence_of_element_located(
+                    (By.ID, "dash_listener")
+                )
+            )
+
+
 
         except TimeoutException:
-            print("hit timeout")
+            print("hit open sso timeout")
 
     def open_explore(self):
         script = """
@@ -170,7 +181,7 @@ class LocustUserBehavior(TaskSet):
 #(leave out for now) @task() - some background API activity
 
     #open dashboard
-    @task(20)
+    @task(6)
     def embed_dashboard_loading(self):
         self.client.timed_event_for_locust(
             "Load", "embed dashboard",
@@ -181,11 +192,10 @@ class LocustUserBehavior(TaskSet):
     def sso_dashboard_loading(self):
         self.client.timed_event_for_locust(
             "Load", "sso dashboard",
-            self.open_sso_dashboard,
-            self.open_dashboard
+            self.open_sso_dashboard
         )
     ##open explore
-    @task(4)
+    @task(2)
     def embed_explore_loading(self):
         self.client.timed_event_for_locust(
             "Load", "explore",
